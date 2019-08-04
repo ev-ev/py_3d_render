@@ -1,0 +1,1 @@
++Fixed bug with pixel showing up at middle of screen

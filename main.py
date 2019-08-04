@@ -1,5 +1,4 @@
 import sys, pygame, math,time,numpy
-from multiprocessing import Process, Lock
 from hashlib import sha1
 import xml.etree.ElementTree as ET
 pygame.init()
@@ -35,8 +34,8 @@ def calculate_2d_point(point, camera = [0,0,0], f = 1000): #The holy grail lmao
             x = ((point[0] - camera[0]) * (f / (point[2] - camera[2]))) + camera[0]
             y = ((point[1] - camera[1]) * (f / (point[2] - camera[2]))) + camera[1]
         else:
-            x = -1
-            y = -1
+            x = -10000
+            y = -10000
     except ZeroDivisionError: #TODO: fix this lmao
         x = -1
         y = -1

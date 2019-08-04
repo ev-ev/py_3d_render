@@ -21,5 +21,3 @@ Make movement with updown camera rotation possible
 
 BUGS:
 
-Pixel appears in the middle of screen if camera is inside a cube
-
