@@ -3,6 +3,10 @@ A 3d render engine written in python. Currently in its alpha stage. I will rewri
 
 
 
+USAGE:
+
+Run main.py (and install necessary modules)
+
 
 
 TODO:
