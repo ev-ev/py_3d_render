@@ -37,8 +37,8 @@ def calculate_2d_point(point, camera = [0,0,0], f = 1000): #The holy grail lmao
             x = -10000
             y = -10000
     except ZeroDivisionError: #TODO: fix this lmao
-        x = -1
-        y = -1
+        x = -10000
+        y = -10000
     return x, y
 
 def compute_rotate(r,p,y):
