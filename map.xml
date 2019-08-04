@@ -1,0 +1,74 @@
+<?xml version="1.0"?>
+<data>
+    <objects>
+        <cube id = "1">
+            <x type = "int">-5</x>
+            <y type = "int">-5</y>
+            <z type = "int">-5</z>
+            <x1 type = "int">5</x1>
+            <y1 type = "int">5</y1>
+            <z1 type = "int">5</z1>
+            <pitch type = "float">0</pitch>
+            <roll type = "float">0</roll>
+            <yaw type = "float">0</yaw>
+        </cube>
+        <sphere id = "2">
+            <x type = "int">20</x>
+            <y type = "int">0</y>
+            <z type = "int">0</z>
+            <r type = "int">5</r>
+            <pitch type = "float">0</pitch>
+            <roll type = "float">0</roll>
+            <yaw type = "float">0</yaw>
+        </sphere>
+        <cube id = "3">
+            <x type = "int">-5</x>
+            <y type = "int">-25</y>
+            <z type = "int">-5</z>
+            <x1 type = "int">5</x1>
+            <y1 type = "int">-15</y1>
+            <z1 type = "int">5</z1>
+            <pitch type = "float">0</pitch>
+            <roll type = "float">0</roll>
+            <yaw type = "float">0</yaw>
+            <animate type = "str">
+object_variables[id]['r'] -= 2 * math.pi/180 * dt / 50
+objects[id][2][7] = object_variables[id]['r']
+objects[id][2][6] = object_variables[id]['r']
+            </animate>
+            <animate_init type = "str">
+object_variables[id]['r'] = 0
+            </animate_init>
+        </cube>
+        <sphere id = "4">
+            <x type = "int">20</x>
+            <y type = "int">-20</y>
+            <z type = "int">0</z>
+            <r type = "int">5</r>
+            <pitch type = "float">0</pitch>
+            <roll type = "float">0</roll>
+            <yaw type = "float">0</yaw>
+            <animate type = "str">
+if object_variables[id]['r'] &lt;= 0:
+    object_variables[id]['bool'] = False
+if object_variables[id]['r'] &gt;= 10:
+    object_variables[id]['bool'] = True
+if object_variables[id]['bool']:
+    object_variables[id]['r'] -= 0.5 * dt / 50
+else:
+    object_variables[id]['r'] += 0.5 * dt / 50
+objects[id][2][3] = round(object_variables[id]['r'])
+            </animate>
+            <animate_init type = "str">
+object_variables[id]['r'] = 0
+object_variables[id]['bool'] = True
+            </animate_init>
+        </sphere>
+    </objects>
+</data>
+
+
+
+
+
+
