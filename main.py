@@ -1,4 +1,4 @@
-import sys, pygame, math,time,numpy
+import sys, pygame, math,time,numpy,re
 from hashlib import sha1
 import xml.etree.ElementTree as ET
 pygame.init()
@@ -160,6 +160,8 @@ def calculate_pyramid():
     
 def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isanimated,anim]}
     result = {}
+    portals = {}
+    rel_objects = {}
     file = open(filename,'r')
     data = file.read()
     file.close()
@@ -167,6 +169,8 @@ def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isa
     for child1 in root:
         if child1.tag == 'objects':
             for child2 in child1:
+                if child2.attrib['id'] == 'auto':
+                    child2.attrib['id'] = str(int(list(rel_objects.keys())[-1]) + 1)
                 if child2.tag == 'cube':
                     params = {}
                     object_variables[child2.attrib['id']] = {}
@@ -175,6 +179,16 @@ def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isa
                             params[attrib.tag] = eval(attrib.text)
                         elif attrib.attrib['type'] == 'str':
                             params[attrib.tag] = attrib.text
+                        elif attrib.attrib['type'] == 'rel':
+                            parse = attrib.text
+                            data = re.findall(r'{.*}\[\w*\]',parse)
+                            for d in data:
+                                rel_id = d.replace('{','').replace('}',' ').replace('[','').replace(']','').split(' ')
+                                if rel_id[0].startswith('self'):
+                                    rel_id[0] = eval(rel_id[0].replace('self',child2.attrib['id']))
+                                parse = parse.replace(d, str(rel_objects[str(rel_id[0])][str(rel_id[1])]))
+                            params[attrib.tag] = eval(parse)
+                            
                         else:
                             params[attrib.tag] = eval('{}({})'.format(attrib.attrib['type'],attrib.text))
                     if 'animate' in params:
@@ -186,8 +200,12 @@ def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isa
                         isanimated = False
                         anim = ''
                     funcparams = [params['x'],params['y'],params['z'],params['x1'],params['y1'],params['z1'],params['pitch'],params['roll'],params['yaw']]
+                    rel_objects[child2.attrib['id']] = params
                     result[child2.attrib['id']] = ['cube',None,funcparams,[],isanimated,anim]
-                
+                    for o,v in rel_objects.items():
+                        #print(o)
+                        pass
+                    
                 if child2.tag == 'sphere':
                     params = {}
                     object_variables[child2.attrib['id']] = {}
@@ -196,6 +214,15 @@ def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isa
                             params[attrib.tag] = eval(attrib.text)
                         elif attrib.attrib['type'] == 'str':
                             params[attrib.tag] = attrib.text
+                        elif attrib.attrib['type'] == 'rel':
+                            parse = attrib.text
+                            data = re.findall(r'{.*}\[\w*\]',parse)
+                            for d in data:
+                                rel_id = d.replace('{','').replace('}',' ').replace('[','').replace(']','').split(' ')
+                                if rel_id[0].startswith('self'):
+                                    rel_id[0] = eval(rel_id[0].replace('self',child2.attrib['id']))
+                                parse = parse.replace(d, str(rel_objects[str(rel_id[0])][str(rel_id[1])]))
+                            params[attrib.tag] = eval(parse)
                         else:
                             params[attrib.tag] = eval('{}({})'.format(attrib.attrib['type'],attrib.text))
                     if 'animate' in params:
@@ -208,8 +235,32 @@ def read_map_xml(filename): # {id:[objecttype,calculatedhash,[params],points,isa
                         anim = ''
                     funcparams = [params['x'],params['y'],params['z'],params['r'],params['pitch'],params['roll'],params['yaw']]
                     result[child2.attrib['id']] = ['sphere',None,funcparams,[],isanimated,anim]
+        elif child1.tag == 'misc':
+            for child2 in child1:
+                if child2.tag == 'portal':
+                    if child2.attrib['id'] not in portals:
+                        portals[child2.attrib['id']] = []
+                    params = {}
+                    for attrib in child2:
+                        if attrib.attrib['type'] == 'eval':
+                            params[attrib.tag] = eval(attrib.text)
+                        elif attrib.attrib['type'] == 'str':
+                            params[attrib.tag] = attrib.text
+                        elif attrib.attrib['type'] == 'rel':
+                            parse = attrib.text
+                            data = re.findall(r'{.*}\[\w*\]',parse)
+                            for d in data:
+                                rel_id = d.replace('{','').replace('}',' ').replace('[','').replace(']','').split(' ')
+                                if rel_id[0].startswith('self'):
+                                    rel_id[0] = eval(rel_id[0].replace('self',child2.attrib['id']))
+                                parse = parse.replace(d, str(rel_objects[str(rel_id[0])][str(rel_id[1])]))
+                            params[attrib.tag] = eval(parse)
+                            
+                        else:
+                            params[attrib.tag] = eval('{}({})'.format(attrib.attrib['type'],attrib.text))
+                    portals[child2.attrib['id']].append(params)
     
-    return result
+    return result, portals
 def get_calculate_hash():
     global camera, camera_facing
     res = ''
@@ -223,7 +274,8 @@ def process_all_points(data):
         draw_point(point)
 
     
-if __name__=='__main__':
+def main():
+    global object_variables
     black = 0, 0, 0
     size = width, height = 1000,700
 
@@ -240,11 +292,13 @@ if __name__=='__main__':
     posa = [0,0,0,30,30,0]
     object_variables = {}
 
-    objects = read_map_xml('map.xml')
+    objects, portals = read_map_xml('map.xml')
     c = 90
     menu = False
     settings = {'updown':False}
-
+    yes = (0, 255, 0)
+    no = (255, 0, 0)
+    globals().update(locals())
     while True:
         dt = clock.tick(100)
         
@@ -302,7 +356,10 @@ if __name__=='__main__':
                         objects[id][3] = calculate_sphere(objects[id][2][0],objects[id][2][1],objects[id][2][2],objects[id][2][3],objects[id][2][4],objects[id][2][5],objects[id][2][6])
                     process_all_points(objects[id][3])
         else:
-            udoption = myfont.render('Updown camera rotation', False, (0, 255, 0))
+            if settings['updown']:
+                udoption = myfont.render('Updown camera rotation', False, yes)
+            else:
+                udoption = myfont.render('Updown camera rotation', False, no)
             screen.blit(menu_img,(0,0))
             screen.blit(udoption,(10,10))
             b1,b2,b3 = pygame.mouse.get_pressed()
@@ -311,7 +368,14 @@ if __name__=='__main__':
                     settings['updown'] = not settings['updown']
                     camera_facing[1] = 0
                     menu = False
+        
         screen.blit(textsurface,(0,0))
         pygame.display.flip()
-
+try:
+    main()
+except Exception as e:
+    print(str(e))
+    print('starting debug console')
+    while True:
+        exec(input('>>>'))
 
